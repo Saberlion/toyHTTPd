@@ -6,6 +6,15 @@
 #define TOYHTTPD_IOHANDLER_HPP
 
 #include <assert.h>
+#include <errno.h>
+#include <sys/socket.h>
+#include <sys/epoll.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
+#include <stdio.h>
+#include <netinet/in.h>
+#include <stdlib.h>
 #include <asm-generic/errno-base.h>
 #include <asm-generic/errno.h>
 #include "NonCopyable.hpp"
@@ -226,7 +235,7 @@ void IoHandler::ioLoop(int serverPort) {
 
             }
             else if (events[i].events & EPOLLERR) {
-                std::cout << "destroy_fd"<< i << std::endl;
+                //std::cout << "destroy_fd"<< i << std::endl;
                 destroy_fd(ep_fd,((Buffer*)events[i].data.ptr)->fd,(Buffer*)events[i].data.ptr,3 );
             }
         }

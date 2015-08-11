@@ -5,6 +5,7 @@
 #ifndef TOYHTTPD_BUFFER_HPP
 #define TOYHTTPD_BUFFER_HPP
 
+#include <sys/socket.h>
 enum version_t {
     HTTP_1_0 = 10,
     HTTP_1_1 = 11
