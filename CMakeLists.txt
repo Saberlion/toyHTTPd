@@ -5,6 +5,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
 
 set(SOURCE_FILES
     main.cpp
-    utils/BoundedQueue.hpp
-    utils/BlockingQueue.hpp)
+    utils/Buffer.hpp
+    utils/IoHandler.hpp
+    utils/NonCopyable.hpp
+    utils/ThreadPool.h)
 add_executable(toyHTTPd ${SOURCE_FILES})
