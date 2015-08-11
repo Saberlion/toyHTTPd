@@ -6,6 +6,8 @@
 #define TOYHTTPD_IOHANDLER_HPP
 
 #include <assert.h>
+#include <asm-generic/errno-base.h>
+#include <asm-generic/errno.h>
 #include "NonCopyable.hpp"
 #include "Buffer.hpp"
 
@@ -13,8 +15,8 @@ class IoHandler:public saberUtils::Noncopyable{
 #define MAX_EPOLL_FD 4096
 public:
     void ioLoop(int serverPort);
-    void handle_output(int fd, Buffer* clientBuffer);
-    void handle_input(int fd, Buffer* clientBuffer, const char *rsps_msg_fmt);
+    void handle_output(int ep_fd, Buffer* clientBuffer);
+    void handle_input(int ep_fd, Buffer* clientBuffer, const char *rsps_msg_fmt);
     void destroy_fd(int fd, int client_fd, Buffer *data_ptr, int case_no);
 
 private:
@@ -33,7 +35,7 @@ void IoHandler::destroy_fd(int fd, int client_fd, Buffer *data_ptr, int case_no)
     delete data_ptr;
 }
 
-void IoHandler::handle_input(int fd, Buffer* clientBuffer,const char *rsps_msg_fmt)
+void IoHandler::handle_input(int ep_fd, Buffer* clientBuffer,const char *rsps_msg_fmt)
 {
     int npos = 0;
     int total = 0;
@@ -54,7 +56,7 @@ void IoHandler::handle_input(int fd, Buffer* clientBuffer,const char *rsps_msg_f
     //printf("%u\n",(unsigned int)pthread_self());
     if (0 == ret || (ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK)) {
         case_no = 1;
-        destroy_fd(fd, cfd, clientBuffer, case_no);
+        destroy_fd(ep_fd, cfd, clientBuffer, case_no);
         return;
     }
 
@@ -106,10 +108,10 @@ void IoHandler::handle_input(int fd, Buffer* clientBuffer,const char *rsps_msg_f
 
     ev.data.ptr = clientBuffer;
     ev.events = EPOLLOUT;
-    epoll_ctl(fd, EPOLL_CTL_MOD, cfd, &ev);
+    epoll_ctl(ep_fd, EPOLL_CTL_MOD, cfd, &ev);
 }
 
-void IoHandler::handle_output(int fd, Buffer* clientBuffer)
+void IoHandler::handle_output(int ep_fd, Buffer* clientBuffer)
 {
     int cfd, ret, case_no;
     struct epoll_event ev;
@@ -124,7 +126,7 @@ void IoHandler::handle_output(int fd, Buffer* clientBuffer)
         case_no = 2;
         //perror("send");
         //printf("cfd: %d\n", cfd);
-        destroy_fd(fd, cfd, clientBuffer, case_no);
+        destroy_fd(ep_fd, cfd, clientBuffer, case_no);
         return;
     }
     if (clientBuffer->out_buf_cur == clientBuffer->out_buf_total) {     //have sent all
@@ -132,12 +134,12 @@ void IoHandler::handle_output(int fd, Buffer* clientBuffer)
         //printf("alive: %d\n", clientBuffer->keep_alive);
         if (clientBuffer->version == HTTP_1_0 && 0 == clientBuffer->keep_alive) {
             case_no = 4;
-            destroy_fd(fd, cfd, clientBuffer, case_no);
+            destroy_fd(ep_fd, cfd, clientBuffer, case_no);
             return;
         }
         ev.data.ptr = clientBuffer;
         ev.events = EPOLLIN;
-        epoll_ctl(fd, EPOLL_CTL_MOD, cfd, &ev);
+        epoll_ctl(ep_fd, EPOLL_CTL_MOD, cfd, &ev);
     }
 }
 
@@ -146,7 +148,7 @@ void IoHandler::ioLoop(int serverPort) {
     struct epoll_event ev, events[MAX_EPOLL_FD];
 
     socklen_t clilen;
-    int epfd = epoll_create(4096);
+    int ep_fd = epoll_create(4096);
     struct sockaddr_in clientaddr;
     struct sockaddr_in serveraddr;
     int listenfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -156,13 +158,13 @@ void IoHandler::ioLoop(int serverPort) {
     setNonblocking(listenfd);
     //设置与要处理的事件相关的文件描述符
 
-    ev.data.fd=listenfd;
+    ev.data.fd = listenfd;
     //设置要处理的事件类型
 
     ev.events=EPOLLIN|EPOLLET;
     //注册epoll事件
 
-    epoll_ctl(epfd,EPOLL_CTL_ADD,listenfd,&ev);
+    epoll_ctl(ep_fd,EPOLL_CTL_ADD,listenfd,&ev);
 
     bzero(&serveraddr, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
@@ -182,48 +184,55 @@ void IoHandler::ioLoop(int serverPort) {
 
     for(;;)
     {
-        int ndfs = epoll_wait(epfd,events,MAX_EPOLL_FD,1000);
+        int ndfs = epoll_wait(ep_fd,events,MAX_EPOLL_FD,1000);
         for(int i =0;i <ndfs;i++)
         {
             if(events[i].data.fd == listenfd)
             {
-                int connfd = accept(listenfd,(sockaddr*)&clientaddr,&clilen);
-                if(connfd < 0)
+                int connfd;
+                while(1)
                 {
-                    perror("connfd < 0");
-                    exit(1);
+                    connfd= accept(listenfd,(sockaddr*)&clientaddr,&clilen);
+                    if(connfd < 0)
+                    {
+                        break;
+                    }
+                    if (connfd >= MAX_EPOLL_FD)
+                    {
+                        close(connfd);
+                        continue;
+                    }
+                    setNonblocking(connfd);
+                    Buffer* buffer = new Buffer();
+                    buffer->fd = connfd;
+                    buffer->addr = clientaddr;
+                    ev.data.ptr = (void *)buffer;
+                    ev.events=EPOLLIN|EPOLLET;
+                    epoll_ctl(ep_fd, EPOLL_CTL_ADD, connfd, &ev);
                 }
-                setNonblocking(connfd);
-                char *str = inet_ntoa(clientaddr.sin_addr);
-                Buffer* buffer = new Buffer();
-                buffer->fd = connfd;
-                buffer->addr = clientaddr;
-                ev.data.ptr = (void *)buffer;
-                ev.events=EPOLLIN|EPOLLET;
-                epoll_ctl(epfd, EPOLL_CTL_ADD, connfd, &ev);
-                std::cout << "add connfd"<<connfd << std::endl;
-
+                continue;
             }
-            else if(events[i].events&EPOLLIN)
+
+            if(events[i].events&EPOLLIN)
             {
-                std::cout << "handle_input"<< i << std::endl;
-                handle_input(epfd, (Buffer*)events[i].data.ptr,rsps_msg_fmt);
+                //std::cout << "handle_input"<< i << std::endl;
+                handle_input(ep_fd, (Buffer*)events[i].data.ptr,rsps_msg_fmt);
 
             }
             else if(events[i].events&EPOLLOUT)
             {
-                std::cout << "handle_output"<< i << std::endl;
-                handle_output(epfd, (Buffer*)events[i].data.ptr);
+                //std::cout << "handle_output"<< i << std::endl;
+                handle_output(ep_fd, (Buffer*)events[i].data.ptr);
 
             }
             else if (events[i].events & EPOLLERR) {
                 std::cout << "destroy_fd"<< i << std::endl;
-                destroy_fd(epfd,((Buffer*)events[i].data.ptr)->fd,(Buffer*)events[i].data.ptr,3 );
+                destroy_fd(ep_fd,((Buffer*)events[i].data.ptr)->fd,(Buffer*)events[i].data.ptr,3 );
             }
         }
 
     }
-    close(epfd);
+    close(ep_fd);
 }
 
 void IoHandler::setNonblocking(int sock)

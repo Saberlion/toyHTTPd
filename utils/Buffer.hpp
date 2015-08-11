@@ -20,7 +20,7 @@ public:
     int in_buf_cur = 0;
     int out_buf_cur = 0;
     int out_buf_total;
-    int keep_alive = 1;
+    int keep_alive = 0;
     enum version_t version;
 
     Buffer()
