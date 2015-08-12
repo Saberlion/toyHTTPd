@@ -18,15 +18,15 @@
 #include <asm-generic/errno-base.h>
 #include <asm-generic/errno.h>
 #include "NonCopyable.hpp"
-#include "Buffer.hpp"
+#include "NetBuffer.hpp"
 
 class IoHandler:public saberUtils::Noncopyable{
 #define MAX_EPOLL_FD 4096
 public:
     void ioLoop(int serverPort);
-    void handle_output(int ep_fd, Buffer* clientBuffer);
-    void handle_input(int ep_fd, Buffer* clientBuffer, const char *rsps_msg_fmt);
-    void destroy_fd(int fd, int client_fd, Buffer *data_ptr, int case_no);
+    void handle_output(int ep_fd, NetBuffer * clientBuffer);
+    void handle_input(int ep_fd, NetBuffer * clientBuffer, const char *rsps_msg_fmt);
+    void destroy_fd(int fd, int client_fd, NetBuffer *data_ptr, int case_no);
 
 private:
     const char *rsps_msg_fmt = "HTTP/1.1 200 OK\r\nContent-Length: %d\r\nConnection: Keep-Alive\r\nContent-Type: text/plain\r\n\r\n";
@@ -34,7 +34,7 @@ private:
     void setNonblocking(int sock);
 };
 
-void IoHandler::destroy_fd(int fd, int client_fd, Buffer *data_ptr, int case_no)
+void IoHandler::destroy_fd(int fd, int client_fd, NetBuffer *data_ptr, int case_no)
 {
     struct epoll_event ev;
     ev.data.ptr = data_ptr;
@@ -44,11 +44,11 @@ void IoHandler::destroy_fd(int fd, int client_fd, Buffer *data_ptr, int case_no)
     delete data_ptr;
 }
 
-void IoHandler::handle_input(int ep_fd, Buffer* clientBuffer,const char *rsps_msg_fmt)
+void IoHandler::handle_input(int ep_fd, NetBuffer * clientBuffer,const char *rsps_msg_fmt)
 {
-    int npos = 0;
-    int total = 0;
-    int ret = 0;
+    size_t npos = 0;
+    size_t total = 0;
+    size_t ret = 0;
     int case_no = 0;
     char headmsg[256];
     char *sep = NULL;
@@ -120,7 +120,7 @@ void IoHandler::handle_input(int ep_fd, Buffer* clientBuffer,const char *rsps_ms
     epoll_ctl(ep_fd, EPOLL_CTL_MOD, cfd, &ev);
 }
 
-void IoHandler::handle_output(int ep_fd, Buffer* clientBuffer)
+void IoHandler::handle_output(int ep_fd, NetBuffer * clientBuffer)
 {
     int cfd, ret, case_no;
     struct epoll_event ev;
@@ -212,7 +212,7 @@ void IoHandler::ioLoop(int serverPort) {
                         continue;
                     }
                     setNonblocking(connfd);
-                    Buffer* buffer = new Buffer();
+                    NetBuffer * buffer = new NetBuffer();
                     buffer->fd = connfd;
                     buffer->addr = clientaddr;
                     ev.data.ptr = (void *)buffer;
@@ -225,18 +225,18 @@ void IoHandler::ioLoop(int serverPort) {
             if(events[i].events&EPOLLIN)
             {
                 //std::cout << "handle_input"<< i << std::endl;
-                handle_input(ep_fd, (Buffer*)events[i].data.ptr,rsps_msg_fmt);
+                handle_input(ep_fd, (NetBuffer *)events[i].data.ptr,rsps_msg_fmt);
 
             }
             else if(events[i].events&EPOLLOUT)
             {
                 //std::cout << "handle_output"<< i << std::endl;
-                handle_output(ep_fd, (Buffer*)events[i].data.ptr);
+                handle_output(ep_fd, (NetBuffer *)events[i].data.ptr);
 
             }
             else if (events[i].events & EPOLLERR) {
                 //std::cout << "destroy_fd"<< i << std::endl;
-                destroy_fd(ep_fd,((Buffer*)events[i].data.ptr)->fd,(Buffer*)events[i].data.ptr,3 );
+                destroy_fd(ep_fd,((NetBuffer *)events[i].data.ptr)->fd,(NetBuffer *)events[i].data.ptr,3 );
             }
         }
 

@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string.h>
-#include "utils/ThreadPool.h"
+#include "utils/ThreadPool.hpp"
 #include "utils/IoHandler.hpp"
 
 int main()
