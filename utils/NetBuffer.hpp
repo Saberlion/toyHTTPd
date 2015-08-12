@@ -18,9 +18,9 @@ public:
     struct sockaddr_in addr;
     char *in_buf;
     char *out_buf;
-    int in_buf_cur = 0;
-    int out_buf_cur = 0;
-    int out_buf_total;
+    size_t in_buf_cur = 0;
+    size_t out_buf_cur = 0;
+    size_t out_buf_total;
     int keep_alive = 1;
     enum version_t version;
 

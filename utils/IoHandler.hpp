@@ -48,7 +48,7 @@ void IoHandler::handle_input(int ep_fd, NetBuffer * clientBuffer,const char *rsp
 {
     size_t npos = 0;
     size_t total = 0;
-    size_t ret = 0;
+    int ret = 0;
     int case_no = 0;
     char headmsg[256];
     char *sep = NULL;
@@ -58,7 +58,7 @@ void IoHandler::handle_input(int ep_fd, NetBuffer * clientBuffer,const char *rsp
 
     struct epoll_event ev;
     int cfd = clientBuffer->fd;
-    int pkg_len = 0;
+    size_t pkg_len = 0;
 
     assert(clientBuffer->in_buf_cur >= 0);
     ret = recv(cfd, clientBuffer->in_buf + clientBuffer->in_buf_cur, 512, MSG_DONTWAIT);
