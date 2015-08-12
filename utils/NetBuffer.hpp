@@ -12,7 +12,7 @@ enum version_t {
 };
 #define MAX_IN_BUF_SIZE (1<<14)
 #define MAX_OUT_BUF_SIZE (1<<20)
-class Buffer{
+class NetBuffer {
 public:
     int fd;
     struct sockaddr_in addr;
@@ -24,12 +24,12 @@ public:
     int keep_alive = 0;
     enum version_t version;
 
-    Buffer()
+    NetBuffer()
     {
         in_buf = new char[MAX_IN_BUF_SIZE];
         out_buf = new char[MAX_OUT_BUF_SIZE];
     }
-    ~Buffer()
+    ~NetBuffer()
     {
         delete[] in_buf;
         delete[] out_buf;
