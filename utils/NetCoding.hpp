@@ -108,4 +108,26 @@ inline vector<string> splitByMulti(const string& src, const string& pattern, siz
     }
     return res;
 }
+
+string getHttpStatus(int code)
+{
+    string res;
+    switch (code)
+    {
+        case 200:res="OK";break;
+        case 204:res="NO CONTENT";break;
+        case 206:res="PARTIAL CONTENT";break;
+        case 301:res="MOVE PERMANENTLY";break;
+        case 302:res="MOVE TEMPORARILY";break;
+        case 304:res="NOT MODIFIED";break;
+        case 400:res="BAD REQUEST";break;
+        case 401:res="UNAUTHORIZED";break;
+        case 403:res="FORBIDDEN";break;
+        case 404:res="NOT FOUND";break;
+        case 500:res="INTERNAL SERVER ERROR";break;
+        case 502:res="BAD GATEWAY";break;
+        case 503:res="SERVICE UNAVAILABLE";break;
+    }
+    return res;
+}
 #endif //TOYHTTPD_NET_HPP

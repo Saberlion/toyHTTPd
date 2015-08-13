@@ -8,7 +8,12 @@
 #include <unordered_map>
 class RequstHanler{
 public:
-    void parse(const string& orig);
+    //to do
+    void parse(const string& orig)
+    {
+        rawData_ = orig;
+
+    }
 
 private:
     void reset()
@@ -18,6 +23,7 @@ private:
         header_.clear();
         body_.clear();
     }
+    string rawData_;
     string method_;
     string version_;
     std::unorder_map<string, string>header_;
