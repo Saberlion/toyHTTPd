@@ -6,6 +6,7 @@
 #define TOYHTTPD_REQUEST_H
 
 #include <unordered_map>
+#include "NetCoding.hpp"
 class RequstHanler{
 public:
     //to do
