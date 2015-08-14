@@ -17,6 +17,34 @@ public:
     {
         rawData_ = rawData;
         auto res = splitByMulti(rawData_,"\r\n",rawData_.size());
+        std::string request_line;
+        if(res.size() != 0)
+            request_line = res.at(0);
+        else
+            return;
+
+        auto request_line_split = splitByMulti(request_line," ");
+        if(request_line_split.size() == 3)
+        {
+            method_ = request_line_split.at(0);
+            request_url_ = request_line_split.at(1);
+            version_ = request_line_split.at(2);
+
+        }
+        else
+            return;
+
+        auto body_segmet = find(res.begin(),res.end(),"");
+        if(body_segmet != res.end())
+        {
+            for(auto it = res.begin()+1;it != body_segmet;it++)
+            {
+                auto header_map = splitByMulti(*it,":");
+                if(header_map.size()==2)
+                    header_[header_map.at(0)] = header_map.at(1);
+            }
+            body_ = res.back();
+        }
 
 
     }
@@ -30,13 +58,14 @@ public:
 
 
     std::string method_;
+    std::string request_url_;
     std::string version_;
     std::unordered_map<std::string, std::string>header_;
     std::string body_;
 
     std::string rawData_;
 private:
-    std::string rawHeader;
+    std::string rawHeader_;
 
 
 

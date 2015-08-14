@@ -7,6 +7,7 @@
 using namespace std;
 int main()
 {
+
     std::fstream fr;
     fr.open("/home/arthur/ClionProjects/toyHTTPd/test/requestheader",std::ios::in | std::ios::binary);
     fr.seekg(0,std::ios::end);
@@ -19,6 +20,8 @@ int main()
     RequestHandler rh;
     rh.parse(str);
     fr.close();
+
+
 
 }
 
