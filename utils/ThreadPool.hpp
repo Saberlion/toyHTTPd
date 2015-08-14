@@ -14,6 +14,7 @@
 class ThreadPool {
 public:
     typedef std::function<void ()> Task;
+
     ThreadPool(size_t);
     template<class F, class... Args>
     auto enqueue(F&& f, Args&&... args)
@@ -29,6 +30,8 @@ private:
     std::mutex queue_mutex;
     std::condition_variable condition;
     std::atomic_bool stop;
+    Task preTaskCallback;
+    Task postTaskCallback;
 };
 
 // the constructor just launches some amount of workers
