@@ -5,8 +5,12 @@
 #ifndef TOYHTTPD_NET_HPP
 #define TOYHTTPD_NET_HPP
 
-using BYTE = unsigned char;
 
+
+#include <algorithm>
+#include <string>
+
+#define BYTE unsigned char
 inline BYTE toHex(BYTE x) {
     return x > 9 ? x - 10 + 'A' : x + '0';
 }
@@ -16,8 +20,9 @@ inline BYTE fromHex(BYTE x) {
     return isupper(x) ? x - 'A' + 10 : x - 'a' + 10;
 }
 
-inline string URIEncode(const string& urlIn) {
-    string urlOut;
+
+inline std::string URIEncode(const std::string& urlIn) {
+    std::string urlOut;
     for (size_t i = 0; i < urlIn.size(); i++) {
         BYTE buf[4];
         memset(buf, 0, sizeof(buf));
@@ -40,8 +45,8 @@ inline string URIEncode(const string& urlIn) {
     return urlOut;
 }
 
-inline string URIDecode(const string& urlIn) {
-    string urlOut;
+inline std::string URIDecode(const std::string& urlIn) {
+    std::string urlOut;
     for (size_t i = 0; i < urlIn.size(); i++) {
         BYTE ch = 0;
 
@@ -59,15 +64,15 @@ inline string URIDecode(const string& urlIn) {
     return urlOut;
 }
 
-inline string upper(const string& src) {
-    string ret = src;
+inline std::string upper(const std::string& src) {
+    std::string ret = src;
     for_each(ret.begin(), ret.end(), [](char& c) { c = toupper(c); });
     return ret;
 }
 
 /*return value optimization will be applied*/
-inline vector<string> splitBySingle(const string& src, const string& pattern, size_t limit = 0) {
-    vector<string> res;
+inline std::vector<std::string> splitBySingle(const std::string& src, const std::string& pattern, size_t limit = 0) {
+    std::vector<std::string> res;
     if (src.empty()) return res;
 
     size_t start = 0;
@@ -75,7 +80,7 @@ inline vector<string> splitBySingle(const string& src, const string& pattern, si
 
     while (start < src.size() && (limit == 0 || res.size() < limit)) {
         end = src.find_first_of(pattern, start);
-        if (string::npos == end) {
+        if (std::string::npos == end) {
             res.push_back(src.substr(start));
             return res;
         }
@@ -88,8 +93,8 @@ inline vector<string> splitBySingle(const string& src, const string& pattern, si
 }
 
 /*return value optimization will be applied*/
-inline vector<string> splitByMulti(const string& src, const string& pattern, size_t limit = 0) {
-    vector<string> res;
+inline std::vector<std::string> splitByMulti(const std::string& src, const std::string& pattern, size_t limit = 0) {
+    std::vector<std::string> res;
     if (src.empty()) return res;
 
     size_t start = 0;
@@ -97,7 +102,7 @@ inline vector<string> splitByMulti(const string& src, const string& pattern, siz
 
     while (start < src.size() && (limit == 0 || res.size() < limit)) {
         end = src.find(pattern, start);
-        if (string::npos == end) {
+        if (std::string::npos == end) {
             res.push_back(src.substr(start));
             return res;
         }
@@ -109,9 +114,9 @@ inline vector<string> splitByMulti(const string& src, const string& pattern, siz
     return res;
 }
 
-string getHttpStatus(int code)
+std::string getHttpStatus(int code)
 {
-    string res;
+    std::string res;
     switch (code)
     {
         case 200:res="OK";break;
