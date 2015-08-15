@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include "NetCoding.hpp"
 #include <string>
+#include <sstream>
+
 class RequestHandler {
 public:
     RequestHandler()=default;
@@ -44,8 +46,8 @@ public:
                     header_[header_map.at(0)] = header_map.at(1);
             }
             body_ = res.back();
-        }
 
+        }
 
     }
     void reset()
@@ -62,10 +64,8 @@ public:
     std::string version_;
     std::unordered_map<std::string, std::string>header_;
     std::string body_;
-
     std::string rawData_;
 private:
-    std::string rawHeader_;
 
 
 
@@ -83,18 +83,25 @@ public:
              header_(header),
              content_type_(content_type),
              length_(length),
-             body_(body){}
+             body_(body){
 
+        header_["Server"] = "toyHTTPd/pre-alpha";
+    }
+
+
+    void toString()
+    {
+        std::stringstream ss;
+    }
     int stat_code_;
     std::string status_;
     std::unordered_map<std::string,std::string>header_;
     std::string content_type_;
     size_t length_;
     std::string body_;
-
     std::string rawData_;
 private:
-    const char* const HTTP_RESPONSE = "HTTP/1.1 %d %s\r\nConnection: %s\r\nServer: toyHTTPd/1.0.0\r\nContent-Type: %s; charset=UTF-8\r\nContent-Length: %d\r\n\r\n%s";
+    const char* const HTTP_RESPONSE = "HTTP/1.1 %d %s\r\n%s\r\n\r\n%s";
 
 };
 

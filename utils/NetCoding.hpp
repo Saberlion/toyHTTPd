@@ -70,7 +70,7 @@ inline std::string upper(const std::string& src) {
     return ret;
 }
 
-/*return value optimization will be applied*/
+
 inline std::vector<std::string> splitBySingle(const std::string& src, const std::string& pattern, size_t limit = 0) {
     std::vector<std::string> res;
     if (src.empty()) return res;
@@ -92,7 +92,7 @@ inline std::vector<std::string> splitBySingle(const std::string& src, const std:
     return res;
 }
 
-/*return value optimization will be applied*/
+
 inline std::vector<std::string> splitByMulti(const std::string& src, const std::string& pattern, size_t limit = 0) {
     std::vector<std::string> res;
     if (src.empty()) return res;
@@ -114,7 +114,7 @@ inline std::vector<std::string> splitByMulti(const std::string& src, const std::
     return res;
 }
 
-std::string getHttpStatus(int code)
+inline std::string getHttpStatus(int code)
 {
     std::string res;
     switch (code)
@@ -134,5 +134,17 @@ std::string getHttpStatus(int code)
         case 503:res="SERVICE UNAVAILABLE";break;
     }
     return res;
+}
+/*
+ * format example: "%Y-%m-%d %H:%M:%S"
+ */
+inline std::string getTime(const std::string& format) {
+    std::string timeStr;
+    time_t timeNow;
+    time(&timeNow);
+    timeStr.resize(64);
+    size_t len = strftime((char*)timeStr.c_str(), timeStr.size(), format.c_str(), localtime(&timeNow));
+    timeStr.resize(len);
+    return timeStr;
 }
 #endif //TOYHTTPD_NET_HPP
