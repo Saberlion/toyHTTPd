@@ -77,31 +77,42 @@ public:
     ResponseHandler(int stat_code,
                     std::unordered_map<std::string, std::string>header,
                     std::string content_type,
-                    size_t length,
                     std::string body)
             :stat_code_(stat_code),
              header_(header),
              content_type_(content_type),
-             length_(length),
              body_(body){
 
         header_["Server"] = "toyHTTPd/pre-alpha";
+        header_["Date"] = getTime("%a,%d %b %Y %X");
     }
 
 
     void toString()
     {
-        std::stringstream ss;
+        char buffer[4096]={0};
+        char statusBuffer[30] = {0};
+        std:: string header;
+        sprintf(statusBuffer,"HTTP/1.1 %d %s",stat_code_, getHttpStatus(stat_code_).c_str());
+        header_["Content-Type"] = content_type_;
+        header.reserve(1024);
+        for(auto&h:header_)
+        {
+            header+=h.first+":"+h.second+"\r\n";
+        }
+        sprintf(buffer,HTTP_RESPONSE, statusBuffer,header.c_str(),body_.c_str());
+
+        rawData_ = buffer;
+
+
     }
     int stat_code_;
-    std::string status_;
     std::unordered_map<std::string,std::string>header_;
     std::string content_type_;
-    size_t length_;
     std::string body_;
     std::string rawData_;
 private:
-    const char* const HTTP_RESPONSE = "HTTP/1.1 %d %s\r\n%s\r\n\r\n%s";
+    const char* const HTTP_RESPONSE = "%s\r\n%s\r\n%s";
 
 };
 
