@@ -10,8 +10,11 @@ enum version_t {
     HTTP_1_0 = 10,
     HTTP_1_1 = 11
 };
+////4k
 #define MAX_IN_BUF_SIZE (1<<14)
+//1M
 #define MAX_OUT_BUF_SIZE (1<<20)
+
 class NetBuffer {
 public:
     int fd;

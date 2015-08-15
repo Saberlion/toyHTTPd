@@ -49,6 +49,11 @@ public:
 
         }
 
+        if(method_ == "GET")
+        {
+            GetMethodParams();
+        }
+
     }
     void reset()
     {
@@ -65,15 +70,34 @@ public:
     std::unordered_map<std::string, std::string>header_;
     std::string body_;
     std::string rawData_;
-private:
 
+    std::unordered_map<std::string, std::string> get_method_params_;
+private:
+    void GetMethodParams()
+    {
+        auto paramsSplit = splitBySingle(request_url_,"?",rawData_.size());
+        std::string paramStr;
+        if(paramsSplit.size())
+        {
+            auto params =  splitByMulti(paramsSplit.at(1),"&");
+            if(params.size() != 0)
+            {
+                for(auto&p:params)
+                {
+                    auto params_map = splitBySingle(p,"=");
+                    if(params_map.size() == 2)
+                        get_method_params_[params_map.at(0)]=params_map.at(1);
+                }
+            }
+        }
+    }
 
 
 };
 
 class ResponseHandler{
 public:
-    ResponseHandler();
+    ResponseHandler() = default;
     ResponseHandler(int stat_code,
                     std::unordered_map<std::string, std::string>header,
                     std::string content_type,
@@ -100,20 +124,21 @@ public:
         {
             header+=h.first+":"+h.second+"\r\n";
         }
-        sprintf(buffer,HTTP_RESPONSE, statusBuffer,header.c_str(),body_.c_str());
+        sprintf(buffer,HTTP_RESPONSE, statusBuffer,header.c_str());
 
         rawData_ = buffer;
 
-
     }
     int stat_code_;
-    std::unordered_map<std::string,std::string>header_;
+    std::unordered_map<std::string, std::string>header_;
     std::string content_type_;
     std::string body_;
     std::string rawData_;
 private:
-    const char* const HTTP_RESPONSE = "%s\r\n%s\r\n%s";
+    const char* const HTTP_RESPONSE = "%s\r\n%s\r\n";
 
 };
+
+
 
 #endif //TOYHTTPD_RQSNRSP_HPP
