@@ -11,6 +11,6 @@ set(SOURCE_FILES
     utils/ThreadPool.hpp
     utils/NetCoding.hpp
     utils/RqsNRsp.hpp
-    )
+    utils/Cache.hpp)
 
 add_executable(toyHTTPd ${SOURCE_FILES})
